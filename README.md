@@ -1,6 +1,8 @@
-# BioMed AI Research Agent 🔬
+# Generative AI Agent for Biomedical Research Papers Review 🔬
 
 An advanced AI-powered platform for analyzing biomedical research papers with automated PICO extraction, entity recognition, semantic search, and intelligent Q&A with verified citations.
+
+This repository hosts the full-stack implementation published at [`Generative-AI-Agent-Biomedical-Research-Papers-Review`](https://github.com/Anirudh77715/Generative-AI-Agent-Biomedical-Research-Papers-Review).
 
 ![Platform Status](https://img.shields.io/badge/status-active-success.svg)
 ![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)
