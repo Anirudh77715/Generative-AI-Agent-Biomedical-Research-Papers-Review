@@ -129,8 +129,16 @@ export class MemStorage implements IStorage {
   async createPicoElement(insertPico: InsertPicoElement): Promise<PicoElement> {
     const id = randomUUID();
     const pico: PicoElement = {
-      ...insertPico,
       id,
+      paperId: insertPico.paperId,
+      population: insertPico.population ?? null,
+      intervention: insertPico.intervention ?? null,
+      comparison: insertPico.comparison ?? null,
+      outcome: insertPico.outcome ?? null,
+      populationConfidence: insertPico.populationConfidence ?? null,
+      interventionConfidence: insertPico.interventionConfidence ?? null,
+      comparisonConfidence: insertPico.comparisonConfidence ?? null,
+      outcomeConfidence: insertPico.outcomeConfidence ?? null,
       extractedAt: new Date(),
     };
     this.picoElements.set(id, pico);
@@ -148,8 +156,12 @@ export class MemStorage implements IStorage {
   async createEntity(insertEntity: InsertEntity): Promise<Entity> {
     const id = randomUUID();
     const entity: Entity = {
-      ...insertEntity,
       id,
+      paperId: insertEntity.paperId,
+      type: insertEntity.type,
+      text: insertEntity.text,
+      frequency: insertEntity.frequency ?? 1,
+      context: insertEntity.context ?? null,
     };
     this.entities.set(id, entity);
     return entity;
@@ -182,8 +194,10 @@ export class MemStorage implements IStorage {
   async createConversation(insertConv: InsertConversation): Promise<Conversation> {
     const id = randomUUID();
     const conversation: Conversation = {
-      ...insertConv,
       id,
+      question: insertConv.question,
+      answer: insertConv.answer,
+      citations: Array.isArray(insertConv.citations) ? insertConv.citations : [],
       createdAt: new Date(),
     };
     this.conversations.set(id, conversation);
