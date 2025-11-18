@@ -494,6 +494,14 @@ Ensure these secrets are set:
    - Integration with external APIs
    - Scheduled analysis jobs
 
+### n8n workflow snapshot (super simple)
+To keep BioPaperGenie automation beginner-friendly, the project ships with a tiny n8n scene:
+1. **HTTP Trigger** – waits for a basic POST payload containing a paper URL/title.
+2. **HTTP Request node** – forwards that payload directly to the server’s `/api/papers` endpoint (acting like a headless upload form).
+3. **Email node** – sends a “paper ingested” confirmation so you know the job finished.
+
+It’s intentionally small, but perfect to explain in an interview how n8n can orchestrate BioPaperGenie without touching backend code.
+
 7. **Collaboration Features**
    - Share papers and analyses
    - Team workspaces
