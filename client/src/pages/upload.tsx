@@ -52,13 +52,14 @@ export default function UploadPage() {
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
+      
       if (file.type === "text/plain") {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -70,19 +71,62 @@ export default function UploadPage() {
           title: "File loaded",
           description: `${file.name} has been loaded successfully.`,
         });
+      } else if (file.type === "application/pdf") {
+        if (!title || !authors || !abstract) {
+          toast({
+            title: "Missing information",
+            description: "Please fill in title, authors, and abstract before uploading a PDF.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("pdf", file);
+        formData.append("title", title);
+        formData.append("authors", authors);
+        formData.append("abstract", abstract);
+
+        try {
+          const response = await fetch("/api/papers/upload-pdf", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error("Upload failed");
+          
+          await response.json();
+          queryClient.invalidateQueries({ queryKey: ["/api/papers"] });
+          
+          toast({
+            title: "PDF uploaded successfully",
+            description: "Your paper has been processed and is ready for analysis.",
+          });
+          
+          setTitle("");
+          setAuthors("");
+          setAbstract("");
+        } catch (error) {
+          toast({
+            title: "Upload failed",
+            description: "There was an error processing your PDF. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Invalid file type",
-          description: "Please upload a text file (.txt)",
+          description: "Please upload a PDF (.pdf) or text file (.txt)",
           variant: "destructive",
         });
       }
     }
-  }, [toast]);
+  }, [toast, title, authors, abstract, queryClient]);
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
       if (file.type === "text/plain") {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -94,10 +138,44 @@ export default function UploadPage() {
           title: "File loaded",
           description: `${file.name} has been loaded successfully.`,
         });
+      } else if (file.type === "application/pdf") {
+        const formData = new FormData();
+        formData.append("pdf", file);
+        formData.append("title", title || "Untitled");
+        formData.append("authors", authors || "Unknown");
+        formData.append("abstract", abstract || "No abstract provided");
+
+        try {
+          const response = await fetch("/api/papers/upload-pdf", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error("Upload failed");
+          
+          const paper = await response.json();
+          queryClient.invalidateQueries({ queryKey: ["/api/papers"] });
+          
+          toast({
+            title: "PDF uploaded successfully",
+            description: "Your paper has been processed and is ready for analysis.",
+          });
+          
+          setTitle("");
+          setAuthors("");
+          setAbstract("");
+          setFullText("");
+        } catch (error) {
+          toast({
+            title: "Upload failed",
+            description: "There was an error processing your PDF. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "Invalid file type",
-          description: "Please upload a text file (.txt)",
+          description: "Please upload a PDF (.pdf) or text file (.txt)",
           variant: "destructive",
         });
       }
@@ -187,12 +265,15 @@ export default function UploadPage() {
                   <div className="flex flex-col items-center justify-center gap-2 py-4">
                     <UploadIcon className="h-8 w-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Drag and drop a text file here, or click to select
+                      Drag and drop a PDF or text file here, or click to select
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supported formats: PDF, TXT
                     </p>
                     <Input
                       id="file-upload"
                       type="file"
-                      accept=".txt"
+                      accept=".txt,.pdf,application/pdf"
                       onChange={handleFileInput}
                       className="hidden"
                       data-testid="input-file-upload"

@@ -10,6 +10,10 @@ import {
   cosineSimilarity,
   answerQuestion,
 } from "./openai";
+import { extractTextFromPDF } from "./pdf-parser";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Papers endpoints
@@ -55,6 +59,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating paper:", error);
       res.status(400).json({ error: "Invalid paper data" });
+    }
+  });
+
+  // PDF upload endpoint
+  app.post("/api/papers/upload-pdf", upload.single("pdf"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No PDF file provided" });
+      }
+
+      const pdfText = await extractTextFromPDF(req.file.buffer);
+      
+      // Extract basic info from request
+      const { title, authors, abstract } = req.body;
+      
+      if (!title || !authors || !abstract) {
+        return res.status(400).json({ error: "Title, authors, and abstract are required" });
+      }
+
+      const validatedData = insertPaperSchema.parse({
+        title,
+        authors,
+        abstract,
+        fullText: pdfText,
+      });
+
+      const paper = await storage.createPaper(validatedData);
+
+      // Generate embeddings for semantic search
+      const chunks = chunkText(pdfText);
+      for (let i = 0; i < chunks.length; i++) {
+        const embedding = await generateEmbedding(chunks[i]);
+        await storage.createTextChunk({
+          paperId: paper.id,
+          chunkText: chunks[i],
+          chunkIndex: i,
+          embedding,
+        });
+      }
+
+      res.json(paper);
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      res.status(500).json({ error: "Failed to process PDF" });
     }
   });
 

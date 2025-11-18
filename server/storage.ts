@@ -197,7 +197,7 @@ export class MemStorage implements IStorage {
       id,
       question: insertConv.question,
       answer: insertConv.answer,
-      citations: Array.isArray(insertConv.citations) ? insertConv.citations : [],
+      citations: insertConv.citations as Array<{ paperId: string; paperTitle: string; excerpt: string }>,
       createdAt: new Date(),
     };
     this.conversations.set(id, conversation);
