@@ -446,7 +446,7 @@ The application includes comprehensive data validation:
 
 1. Click the **"Publish"** button in the top right
 2. Configure your deployment settings
-3. Your app will be live at `your-repl-name.replit.app`
+
 
 ### Custom Domain
 
